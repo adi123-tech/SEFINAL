@@ -13,7 +13,8 @@ app = Flask(__name__)
 CORS(app)
 
 # Connect to MongoDB Atlas
-client = MongoClient("mongodb+srv://Aditya:aditya@cluster0.9ex6qts.mongodb.net/")
+client = MongoClient(
+    "mongodb+srv://Aditya:aditya@cluster0.9ex6qts.mongodb.net/")
 db = client["SE_FINAL"]
 collection = db["product"]
 
@@ -178,39 +179,41 @@ sample_data = [
         "price": 40.00
     },
     {
-    "product_id": "7622201756697",
-    "name": "Oreo Cookies",
-    "image": "https://i.ibb.co/7VS61pR/4.png",
-    "brand": "Oreo",
-    "category": "Cookies",
-    "ingredients": ["Wheat Flour", "Sugar", "Palm Oil", "Cocoa Powder", "Glucose Syrup", "Salt", "Leavening Agent (E500)", "Emulsifier (Soy Lecithin)", "Artificial Flavor (Vanillin)"],
-    "allergens": ["Wheat", "Soy"],
-    "additives": ["E500", "Soy Lecithin"],
-    "nutritional_information": {
-        "calories": 160,
-        "negative": {
-            "fat": 7,
-            "saturated_fat": 3,
-            "trans_fat": 0,
-            "cholesterol": 0,
-            "sodium": 75
+        "product_id": "7622201756697",
+        "name": "Oreo Cookies",
+        "image": "https://i.ibb.co/7VS61pR/4.png",
+        "brand": "Oreo",
+        "category": "Cookies",
+        "ingredients": ["Wheat Flour", "Sugar", "Palm Oil", "Cocoa Powder", "Glucose Syrup", "Salt", "Leavening Agent (E500)", "Emulsifier (Soy Lecithin)", "Artificial Flavor (Vanillin)"],
+        "allergens": ["Wheat", "Soy"],
+        "additives": ["E500", "Soy Lecithin"],
+        "nutritional_information": {
+            "calories": 160,
+            "negative": {
+                "fat": 7,
+                "saturated_fat": 3,
+                "trans_fat": 0,
+                "cholesterol": 0,
+                "sodium": 75
+            },
+            "positive": {
+                "carbohydrates": 21,
+                "fiber": 1,
+                "sugars": 13,
+                "protein": 2,
+                "vitamin_a": 0,
+                "vitamin_c": 0,
+                "calcium": 4,
+                "iron": 6
+            }
         },
-        "positive": {
-            "carbohydrates": 21,
-            "fiber": 1,
-            "sugars": 13,
-            "protein": 2,
-            "vitamin_a": 0,
-            "vitamin_c": 0,
-            "calcium": 4,
-            "iron": 6
-        }
-    },
-    "price": 10
+        "price": 10
     }
 ]
 
 # Function to generate barcode image and link it with product
+
+
 def generate_and_link_barcode(product):
     barcode_data = str(product["product_id"])[-4:]
     output_filename = f"barcode_{barcode_data}.png"
@@ -220,9 +223,11 @@ def generate_and_link_barcode(product):
     barcode_instance = barcode_class(barcode_data, writer=ImageWriter())
     barcode_instance.save(output_filename)
     barcode_instance = str(barcode_instance)
-    
+
     # Link barcode to product in the database
-    collection.update_one({"product_id": product["product_id"]}, {"$set": {"barcode": barcode_instance}})
+    collection.update_one({"product_id": product["product_id"]}, {
+                          "$set": {"barcode": barcode_instance}})
+
 
 # Insert sample data and link each product with a barcode
 for data in sample_data:
@@ -230,6 +235,7 @@ for data in sample_data:
     if not existing_product:
         collection.insert_one(data)
         generate_and_link_barcode(data)
+
 
 def scan_barcode():
     global is_scanning
@@ -253,6 +259,7 @@ def scan_barcode():
 
     return barcode_data
 
+
 def get_product_info(barcode_data):
     product = collection.find_one({"barcode": barcode_data})
     if product:
@@ -260,16 +267,9 @@ def get_product_info(barcode_data):
     return product
 
 
-
-
-
-
-
 @app.route('/')
 def index():
     return render_template('index.html')
-
-
 
 
 @app.route('/scan', methods=['GET'])
