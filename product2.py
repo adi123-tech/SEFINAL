@@ -13,7 +13,7 @@ import openai
 
 
 
-#openai.api_key = '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'
+openai.api_key = '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'
 
 
 app = Flask(__name__)
