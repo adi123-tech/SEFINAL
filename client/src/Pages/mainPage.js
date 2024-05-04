@@ -8,7 +8,7 @@ function MainPage() {
     const [showPleaseWaitPopup, setShowPleaseWaitPopup] = useState(false);
     const [showPlaceQRPopup, setShowPlaceQRPopup] = useState(false);
     const [showWrongQRPopup, setShowWrongQRPopup] = useState(false);
-
+    const [nutritionInfo, setNutritionInfo] = useState(null);
     
 
     const handleScanButtonClick = async () => {
@@ -35,6 +35,9 @@ function MainPage() {
               setShowPlaceQRPopup(false);
               setShowWrongQRPopup(true);
           }
+          // Send product data to API route for nutrition analysis
+          const nutritionResponse = await axios.post('http://127.0.0.1:5000/api/calculateNutrition', { productData });
+          setNutritionInfo(nutritionResponse.data);
         } catch (error) {
             console.error('Error scanning barcode:', error);
         } finally {
@@ -42,6 +45,8 @@ function MainPage() {
             setIsScanning(false);
         }
     };
+
+
 
     const closeWrongQRPopup = () => {
         setShowWrongQRPopup(false);
@@ -142,6 +147,12 @@ function MainPage() {
                 <div className='Product_image'>
                     <img src={productInfo.image} alt="No Image"/>
                 </div>
+            )}
+            {nutritionInfo && (
+                    <p>
+                        Nutrition Score: {nutritionInfo.nutritionScore}<br />
+                        Health Tips: {nutritionInfo.healthTips}
+                    </p>
             )}
         </div>
 

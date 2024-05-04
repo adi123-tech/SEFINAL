@@ -8,6 +8,13 @@ import barcode
 from barcode.writer import ImageWriter
 import numpy as np
 import io
+import openai
+
+
+
+
+openai.api_key = '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'
+
 
 app = Flask(__name__)
 CORS(app)
@@ -258,6 +265,71 @@ def get_product_info(barcode_data):
     if product:
         product['_id'] = str(product['_id'])
     return product
+
+@app.route('/api/calculateNutrition', methods=['POST'])
+def calculate_nutrition():
+    try:
+        # Get product data from the request
+        product_data = request.json['productData']
+        
+        # Prepare the input prompt for GPT-3.5
+        input_prompt = f"Calculate nutrition score and health tips for {product_data['name']}. "
+        input_prompt += f"This product contains {', '.join(product_data['ingredients'])} as ingredients. "
+        input_prompt += f"It belongs to the category of {product_data['category']}. "
+        input_prompt += f"Nutritional information per serving: "
+        input_prompt += f"Calories: {product_data['nutritional_information']['calories']}, "
+        input_prompt += f"Fat: {product_data['nutritional_information']['negative']['fat']}g, "
+        input_prompt += f"Carbohydrates: {product_data['nutritional_information']['positive']['carbohydrates']}g, "
+        input_prompt += f"Protein: {product_data['nutritional_information']['positive']['protein']}g. "
+
+        # Generate response using GPT-3.5
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "system", "content": input_prompt}]
+        )
+
+        # Extract nutrition score and health tips from the response
+        generated_text = response['choices'][0]['message']['content']
+        nutrition_score = extract_nutrition_score(generated_text)
+        health_tips = extract_health_tips(generated_text)
+
+        return jsonify({
+            'nutritionScore': nutrition_score,
+            'healthTips': health_tips
+        })
+    except Exception as e:
+        # Handle any errors that might occur during the calculation
+        print("Error calculating nutrition:", str(e))
+        return jsonify({'error': 'Failed to calculate nutrition'}), 500
+
+
+def extract_nutrition_score(generated_text):
+    try:
+        # Extract nutrition score from generated text
+        # You can implement your own logic to extract the score from the text
+        # For demonstration, let's assume the score is the first number in the text
+        # You may need to use regular expressions or other methods for a more accurate extraction
+        score = None
+        for word in generated_text.split():
+            if word.isdigit():
+                score = int(word)
+                break
+        return score
+    except Exception as e:
+        print("Error extracting nutrition score:", str(e))
+        return None
+
+def extract_health_tips(generated_text):
+    try:
+        # Extract health tips from generated text
+        # You can implement your own logic to extract the health tips from the text
+        # For demonstration, let's assume the health tips are the text after the score
+        # You may need to use more sophisticated methods for accurate extraction
+        tips = generated_text.split("Health Tips:")[1].strip()
+        return tips
+    except Exception as e:
+        print("Error extracting health tips:", str(e))
+        return None
 
 
 
